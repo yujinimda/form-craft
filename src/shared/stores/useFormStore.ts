@@ -57,7 +57,7 @@ export const useFormStore = create<FormStore>((set) => ({
     set((s) => {
       const oldIdx = s.fields.findIndex((f) => f.id === activeId);
       const newIdx = s.fields.findIndex((f) => f.id === overId);
-      if (oldIdx === -1 || newIdx === -1) return s;
+      if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return s;
       const next = [...s.fields];
       const [moved] = next.splice(oldIdx, 1); 
       next.splice(newIdx, 0, moved);
