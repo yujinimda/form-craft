@@ -3,18 +3,24 @@ import { useFormStore } from '@/shared/stores/useFormStore';
 import { Badge } from '@/shared/ui/Badge';
 import { Input } from '@/shared/ui/Input';
 import { Toggle } from '@/shared/ui/Toggle';
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 
 interface FieldCardProps {
   field: FormField;
+  dragListeners?: SyntheticListenerMap;
 }
-
-export function FieldCard({ field }: FieldCardProps) {
+export function FieldCard({ field, dragListeners }: FieldCardProps) {
   const { updateField, removeField, addOption, removeOption, updateOption } = useFormStore();
 
   return (
     <div className="bg-white border border-border/10 rounded-xl shadow-sm px-4 py-4 flex gap-3">
       {/* 드래그 핸들 */}
-      <div className="flex items-center text-[#C7C7CC] cursor-grab text-xl select-none">⠿</div>
+      <div
+        className="flex items-center text-[#C7C7CC] hover:text-muted cursor-grab text-xl select-none"
+        {...dragListeners}
+      >
+        ⠿
+      </div>
 
       <div className="flex-1 flex flex-col gap-4">
         {/* 상단: 뱃지 + 필수 토글 + 삭제 */}
