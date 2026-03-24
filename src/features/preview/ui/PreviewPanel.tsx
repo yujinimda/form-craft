@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useFormStore } from '@/shared/stores/useFormStore';
+import { useAppStore } from '@/shared/stores/useAppStore';
 
 export function PreviewPanel() {
   const { title, fields } = useFormStore();
@@ -9,7 +10,7 @@ export function PreviewPanel() {
   // 에러 상태
   const [errors, setErrors] = useState<Record<string, string>>({});
   // 제출 완료 여부
-  const [submitted, setSubmitted] = useState(false);
+  const { setView, setSubmittedData } = useAppStore();
 
   const updateValue = (id: string, value: string | string[]) => {
     setValues((prev) => ({ ...prev, [id]: value }));
@@ -42,16 +43,10 @@ export function PreviewPanel() {
 
   const handleSubmit = () => {
     if (validate()) {
-      setSubmitted(true);
+      setSubmittedData(values);
+      setView('result');
     }
   };
-
-  // 제출 완료 시 결과 화면 (임시 — #10에서 분리)
-  if (submitted) {
-    return (
-      <div className="text-center text-sm text-muted">제출 완료! (#10에서 결과 화면 구현 예정)</div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-8">
