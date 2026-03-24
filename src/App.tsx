@@ -1,8 +1,14 @@
 import { Header } from '@/shared/ui/Header';
 import { FormEditor } from '@/features/builder/ui/FormEditor';
 import { PreviewPanel } from '@/features/preview/ui/PreviewPanel';
+import { ResultView } from '@/features/result/ui/ResultView';
+import { useAppStore } from '@/shared/stores/useAppStore';
 
 export default function App() {
+  const view = useAppStore((s) => s.view);
+
+  if (view === 'result') return <ResultView />;
+
   return (
     <div className="min-h-screen bg-surface">
       <Header />
