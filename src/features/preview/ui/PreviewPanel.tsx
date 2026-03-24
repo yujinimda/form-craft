@@ -1,7 +1,57 @@
+import { useState } from 'react';
 import { useFormStore } from '@/shared/stores/useFormStore';
 
 export function PreviewPanel() {
   const { title, fields } = useFormStore();
+
+  // 각 필드별 입력값 저장
+  const [values, setValues] = useState<Record<string, string | string[]>>({});
+  // 에러 상태
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  // 제출 완료 여부
+  const [submitted, setSubmitted] = useState(false);
+
+  const updateValue = (id: string, value: string | string[]) => {
+    setValues((prev) => ({ ...prev, [id]: value }));
+    // 입력하면 에러 해제
+    setErrors((prev) => ({ ...prev, [id]: '' }));
+  };
+
+  // 체크박스 토글
+  const toggleCheckbox = (fieldId: string, optionValue: string) => {
+    const current = (values[fieldId] as string[]) || [];
+    const next = current.includes(optionValue)
+      ? current.filter((v) => v !== optionValue)
+      : [...current, optionValue];
+    updateValue(fieldId, next);
+  };
+
+  // 유효성 검사
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    fields.forEach((field) => {
+      if (!field.required) return;
+      const val = values[field.id];
+      if (!val || (Array.isArray(val) && val.length === 0) || val === '') {
+        newErrors[field.id] = '필수 항목입니다';
+      }
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (validate()) {
+      setSubmitted(true);
+    }
+  };
+
+  // 제출 완료 시 결과 화면 (임시 — #10에서 분리)
+  if (submitted) {
+    return (
+      <div className="text-center text-sm text-muted">제출 완료! (#10에서 결과 화면 구현 예정)</div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -27,20 +77,28 @@ export function PreviewPanel() {
 
               {field.type === 'text' && (
                 <input
-                  className="bg-surface rounded-lg px-4 py-3 text-sm text-text placeholder:text-muted outline-none"
+                  className={`bg-surface rounded-lg px-4 py-3 text-sm text-text placeholder:text-muted outline-none ${errors[field.id] ? 'ring-1 ring-error' : ''}`}
                   placeholder={field.placeholder}
+                  value={(values[field.id] as string) || ''}
+                  onChange={(e) => updateValue(field.id, e.target.value)}
                 />
               )}
 
               {field.type === 'textarea' && (
                 <textarea
-                  className="bg-surface rounded-lg px-4 py-3 text-sm text-text placeholder:text-muted outline-none resize-none h-24"
+                  className={`bg-surface rounded-lg px-4 py-3 text-sm text-text placeholder:text-muted outline-none resize-none h-24 ${errors[field.id] ? 'ring-1 ring-error' : ''}`}
                   placeholder={field.placeholder}
+                  value={(values[field.id] as string) || ''}
+                  onChange={(e) => updateValue(field.id, e.target.value)}
                 />
               )}
 
               {field.type === 'select' && (
-                <select className="bg-surface rounded-lg px-4 py-3 text-sm text-text outline-none">
+                <select
+                  className={`bg-surface rounded-lg px-4 py-3 text-sm text-text outline-none ${errors[field.id] ? 'ring-1 ring-error' : ''}`}
+                  value={(values[field.id] as string) || ''}
+                  onChange={(e) => updateValue(field.id, e.target.value)}
+                >
                   <option value="">선택하세요</option>
                   {field.options.map((opt) => (
                     <option key={opt.id} value={opt.value}>
@@ -51,12 +109,16 @@ export function PreviewPanel() {
               )}
 
               {field.type === 'checkbox' && (
-                <div className="flex flex-col gap-3">
+                <div
+                  className={`flex flex-col gap-3 ${errors[field.id] ? 'ring-1 ring-error rounded-lg p-2' : ''}`}
+                >
                   {field.options.map((opt) => (
                     <label key={opt.id} className="flex items-center gap-3">
                       <input
                         type="checkbox"
-                        className="size-5 rounded border-border accent-primary"
+                        className="size-5 accent-primary"
+                        checked={((values[field.id] as string[]) || []).includes(opt.value)}
+                        onChange={() => toggleCheckbox(field.id, opt.value)}
                       />
                       <span className="text-sm text-muted">{opt.value || '옵션'}</span>
                     </label>
@@ -65,21 +127,34 @@ export function PreviewPanel() {
               )}
 
               {field.type === 'radio' && (
-                <div className="flex flex-col gap-3">
+                <div
+                  className={`flex flex-col gap-3 ${errors[field.id] ? 'ring-1 ring-error rounded-lg p-2' : ''}`}
+                >
                   {field.options.map((opt) => (
                     <label key={opt.id} className="flex items-center gap-3">
-                      <input type="radio" name={field.id} className="size-5 accent-primary" />
+                      <input
+                        type="radio"
+                        name={field.id}
+                        className="size-5 accent-primary"
+                        checked={(values[field.id] as string) === opt.value}
+                        onChange={() => updateValue(field.id, opt.value)}
+                      />
                       <span className="text-sm text-muted">{opt.value || '옵션'}</span>
                     </label>
                   ))}
                 </div>
               )}
+
+              {errors[field.id] && <span className="text-xs text-error">{errors[field.id]}</span>}
             </div>
           ))}
         </div>
 
         <div className="pt-8">
-          <button className="w-full h-11 bg-primary text-white text-sm rounded-full hover:bg-primary-hover cursor-pointer">
+          <button
+            onClick={handleSubmit}
+            className="w-full h-11 bg-primary text-white text-sm rounded-full hover:bg-primary-hover cursor-pointer"
+          >
             제출하기
           </button>
         </div>
